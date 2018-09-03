@@ -27,6 +27,8 @@
 #define OFFSET_OF(t, m) ((u32)&((t *)NULL)->m)
 #define CONTAINER_OF(mp, t, mn) ((t *)((u32)mp - OFFSET_OF(t, mn)))
 
+#define R_FAILED(res)   ((res)!=0)
+
 typedef uint8_t u8;
 typedef uint16_t u16;
 typedef uint32_t u32;
@@ -50,6 +52,7 @@ enum KB_FIRMWARE_VERSION {
 	KB_FIRMWARE_VERSION_301 = 2,
 	KB_FIRMWARE_VERSION_400 = 3,
 	KB_FIRMWARE_VERSION_500 = 4,
+    KB_FIRMWARE_VERSION_600 = 5,
 	KB_FIRMWARE_VERSION_MAX
 };
 

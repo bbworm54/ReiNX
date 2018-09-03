@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2018 naehrwert
+* Copyright (c) 2018 naehrwert, Reisyukaku
 *
 * This program is free software; you can redistribute it and/or modify it
 * under the terms and conditions of the GNU General Public License,
@@ -17,27 +17,33 @@
 .section .text.start
 .arm
 
-.extern _reloc_ipl
-.type _reloc_ipl, %function
-
 .extern memset
 .type memset, %function
 
-.extern ipl_main
-.type ipl_main, %function
+.extern heap_init
+.type heap_init, %function
+
+.extern bootrom
+.type bootrom, %function
+
+.extern bootloader
+.type bootloader, %function
+
+.extern firmware
+.type firmware, %function
 
 .globl _start
 .type _start, %function
 _start:
 	ADR R0, _start
-	LDR R1, =__ipl_start
+	LDR R1, =payload_start
 	CMP R0, R1
 	BEQ _real_start
 
 	/* If we are not in the right location already, copy a relocator to upper IRAM. */
-	ADR R2, _reloc_ipl
+	ADR R2, reloc_payload
 	LDR R3, =0x4003FF00
-	MOV R4, #(_real_start - _reloc_ipl)
+	MOV R4, #(_real_start - reloc_payload)
 _copy_loop:
 	LDMIA R2!, {R5}
 	STMIA R3!, {R5}
@@ -45,17 +51,17 @@ _copy_loop:
 	BNE _copy_loop
 
 	/* Use the relocator to copy ourselves into the right place. */
-	LDR R2, =__ipl_end
+	LDR R2, =payload_end
 	SUB R2, R2, R1
 	LDR R3, =_real_start
 	LDR R4, =0x4003FF00
 	BX R4
 
-_reloc_ipl:
+reloc_payload:
 	LDMIA R0!, {R4-R7}
 	STMIA R1!, {R4-R7}
 	SUBS R2, #0x10
-	BNE _reloc_ipl
+	BNE reloc_payload
 	/* Jump to the relocated entry. */
 	BX R3
 
@@ -73,18 +79,3 @@ _real_start:
 	BL bootloader
 	BL firmware
 	B .
-
-.globl rebootRCM
-.type rebootRCM, %function
-rebootRCM:
-	MOVS    R3, #2
-	LDR     R2, =0x7000E450
-	LDR     R1, [R2]
-	ORRS    R3, R1
-	STR     R3, [R2]
-	MOVS    R3, #0x10
-	LDR     R2, =0x7000E400
-	LDR     R1, [R2]
-	ORRS    R3, R1
-	MOVS    R0, #0
-	STR     R3, [R2]

@@ -11,22 +11,32 @@ Put `ReiNX` folder on the root of your switch's SD card and run `ReiNX.bin` with
 
 You'll need devkitpro with devkitARM and run `make`
 
+To compile with Docker, `chmod +x docker-build.sh` and run the shell script `./docker-build.sh`. After that, just check `out` dir. This will compile without requiring installation of DevKit* dependencies.
+
 
 **Features:**
+* Modularity (doesn't rely on or require any SD files to run; customize SD files to your liking)
 
 * Loads all KIPs from `/ReiNX/sysmodules/` directory
 
 * Optional custom kernel/secmon/warmboot
 
-* Default kips with exefs redir from `/ReiNX/titles/{tid}`
+* FS patches on the fly (NCA verify/cmac and optional nogc)
 
+* Exclusive ReiNX sysmodules
+
+* ES patch in RXP patch format (used with custom loader.kip)
+
+**Official thread:**
+
+[HERE](https://gbatemp.net/threads/official-reinx-thread.512203/)
 
 **Credits:**
- 
+
  Naehrwert for hardware init code and generally being helpful!
- 
+
  CTCaer and st4rk for their contribution to the hardware code aswell!
- 
- SciresM for kernel processes!
- 
+
+ SciresM for sysmodules!
+
  The community for your support!

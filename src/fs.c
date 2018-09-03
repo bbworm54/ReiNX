@@ -1,5 +1,4 @@
 /*
-* Copyright (c) 2018 naehrwert
 * Copyright (c) 2018 Reisyukaku
 *
 * This program is free software; you can redistribute it and/or modify it
@@ -18,7 +17,6 @@
 #include <stddef.h>
 #include <string.h>
 #include "hwinit.h"
-#include "hwinit/gfx.h"
 #include "hwinit/ff.h"
 #include "error.h"
 #include "fs.h"
@@ -29,7 +27,7 @@ FATFS sd_fs;
 int sd_mounted;
 FIL fp;
 
-u32 sd_mount() {
+u32 sdMount() {
     if (sd_mounted) return 1;
 
     if (sdmmc_storage_init_sd(&sd_storage, &sd_sdmmc, SDMMC_1, SDMMC_BUS_WIDTH_4, 11) && f_mount(&sd_fs, "", 1) == FR_OK) {
@@ -40,9 +38,17 @@ u32 sd_mount() {
     return 0;
 }
 
+void sdUnmount() {
+    if (!sd_mounted) return;
+    f_mount(NULL, "", 1);
+    sdmmc_storage_end(&sd_storage);
+    sd_mounted = 0;
+}
+
 u32 fopen(const char *path, const char *mode) {
-    if (f_open(&fp, path, mode[0] == 'w' ? FA_WRITE : FA_READ) != FR_OK) 
-        return NULL;
+    u32 m = (mode[0] == 0x77 ? (FA_WRITE|FA_CREATE_NEW) : FA_READ);
+    if (f_open(&fp, path, m) != FR_OK) 
+        return 0;
     return 1;
 }
 
@@ -52,7 +58,7 @@ u32 fread(void *buf, size_t size, size_t ntimes) {
         u32 rsize = MIN(ntimes * size, size);
         if (f_read(&fp, ptr, rsize, NULL) != FR_OK) {
             error("Failed read!\n");
-            return NULL;
+            return 0;
         }
 
         ptr += rsize;
@@ -67,7 +73,7 @@ u32 fwrite(void *buf, size_t size, size_t ntimes) {
         u32 rsize = MIN(ntimes * size, size);
         if (f_write(&fp, ptr, rsize, NULL) != FR_OK) {
             error("Failed write!\n");
-            return NULL;
+            return 0;
         }
 
         ptr += rsize;
@@ -100,12 +106,16 @@ size_t enumerateDir(char ***output, char *path, char *pattern) {
     strcpy(pathb, path);
     pathb[pathlen] = '/';
 
-    int i; for (i = 0; fno.fname[0] != 0 && fr == FR_OK; i++) {
+    int i = 0; 
+    while (fno.fname[0] != 0 && fr == FR_OK) {
+        if (fno.fname[0] == '.') goto next;  
         out = (char **)realloc(out, (i+1) * sizeof(char *));
         out[i] = (char *)malloc(FF_LFN_BUF);
         strcpy(out[i], pathb);
         strcat(out[i], fno.fname);
         pathb[pathlen+1] = 0;
+        i++;
+       next:
         f_findnext(&dp, &fno);
     }
 
